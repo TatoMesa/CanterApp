@@ -1,0 +1,18 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import (
+    CategoriaViewSet, 
+    ProductoViewSet, 
+    PedidoViewSet, 
+    MercadoPagoWebhookView
+)
+
+router = DefaultRouter()
+router.register(r'categorias', CategoriaViewSet, basename='categoria')
+router.register(r'productos', ProductoViewSet, basename='producto')
+router.register(r'pedidos', PedidoViewSet, basename='pedido')
+
+urlpatterns = [
+    path('', include(router.urls)),
+    path('webhooks/mercadopago/', MercadoPagoWebhookView.as_view(), name='mp_webhook'),
+]
