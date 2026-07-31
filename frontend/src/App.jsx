@@ -28,14 +28,36 @@ export default function App() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
+  // Cargar pedidos almacenados o iniciar en blanco
+  const getInitialOrders = () => {
+    try {
+      const saved = localStorage.getItem('canterapp_orders');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn('Error leyendo localStorage orders', e);
+    }
+    return INITIAL_ORDERS; // Array vacío []
+  };
+
   const [categories] = useState(INITIAL_CATEGORIES);
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [cart, setCart] = useState([]);
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
+  const [orders, setOrders] = useState(getInitialOrders);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeTrackedOrder, setActiveTrackedOrder] = useState(null);
   const [isProductManagerOpen, setIsProductManagerOpen] = useState(false);
+
+  // Guardar cambios de pedidos en localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('canterapp_orders', JSON.stringify(orders));
+    } catch (e) {
+      console.warn('Error guardando en localStorage', e);
+    }
+  }, [orders]);
 
   // Sync URL changes
   useEffect(() => {
@@ -105,16 +127,19 @@ export default function App() {
   // Kitchen KDS Order State Transition
   const handleUpdateOrderStatus = (orderId, newStatus) => {
     setOrders((prevOrders) =>
-      prevOrders.map((ord) => {
-        if (ord.id === orderId) {
-          const updated = { ...ord, estado_pedido: newStatus };
-          if (activeTrackedOrder && activeTrackedOrder.id === orderId) {
-            setActiveTrackedOrder(updated);
+      prevOrders
+        .map((ord) => {
+          if (ord.id === orderId) {
+            const updated = { ...ord, estado_pedido: newStatus };
+            if (activeTrackedOrder && activeTrackedOrder.id === orderId) {
+              setActiveTrackedOrder(updated);
+            }
+            return updated;
           }
-          return updated;
-        }
-        return ord;
-      })
+          return ord;
+        })
+        // Al marcar como ENTREGADO, quitar el pedido de las comandas activas de cocina
+        .filter((ord) => ord.estado_pedido !== 'ENTREGADO')
     );
   };
 

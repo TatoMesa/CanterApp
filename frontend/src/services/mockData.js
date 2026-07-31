@@ -12,7 +12,7 @@ export const INITIAL_PRODUCTS = [
     id: 101,
     categoria: 'burgers',
     nombre: 'Smash Double Cheese Burger',
-    descripcion: 'Doble medalla de carne smash 120g, doble cheddar cheddar inglés, bacon crocante y salsa Canter secreta en pan brioche.',
+    descripcion: 'Doble medalla de carne smash 120g, doble cheddar inglés, bacon crocante y salsa Canter secreta en pan brioche.',
     precio: 8900.00,
     imagen_final: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
     disponible: true
@@ -91,53 +91,5 @@ export const INITIAL_PRODUCTS = [
   }
 ];
 
-export const INITIAL_ORDERS = [
-  {
-    id: 1042,
-    cliente_nombre: 'Mariana López',
-    telefono: '1154329876',
-    mesa_o_direccion: 'Mesa 4',
-    notas_cocina: 'Sin cebolla en la hamburguesa por favor',
-    metodo_pago: 'EFECTIVO',
-    estado_pago: 'PENDIENTE',
-    estado_pedido: 'PENDIENTE',
-    total: 10300.00,
-    fecha_creacion: new Date(Date.now() - 5 * 60000).toISOString(),
-    items: [
-      { id: 1, producto_nombre: 'Smash Double Cheese Burger', cantidad: 1, precio_unitario: 8900.00, notas: 'Sin cebolla' },
-      { id: 2, producto_nombre: 'Empanada Carne Cortada a Cuchillo', cantidad: 1, precio_unitario: 1400.00, notas: '' }
-    ]
-  },
-  {
-    id: 1043,
-    cliente_nombre: 'Gonzalo Rossi',
-    telefono: '1198765432',
-    mesa_o_direccion: 'Mesa 12',
-    notas_cocina: 'La cerveza bien helada',
-    metodo_pago: 'MERCADO_PAGO',
-    estado_pago: 'PAGADO',
-    estado_pedido: 'EN_PREPARACION',
-    total: 15000.00,
-    fecha_creacion: new Date(Date.now() - 12 * 60000).toISOString(),
-    items: [
-      { id: 3, producto_nombre: 'Pizza Napolitana Premium', cantidad: 1, precio_unitario: 11200.00, notas: '' },
-      { id: 4, producto_nombre: 'Cerveza IPA Artesanal 500ml', cantidad: 1, precio_unitario: 3800.00, notas: '' }
-    ]
-  },
-  {
-    id: 1044,
-    cliente_nombre: 'Camila Benítez',
-    telefono: '1144556677',
-    mesa_o_direccion: 'Mesa 8',
-    notas_cocina: '',
-    metodo_pago: 'MERCADO_PAGO',
-    estado_pago: 'PAGADO',
-    estado_pedido: 'LISTO_PARA_RETIRAR',
-    total: 13700.00,
-    fecha_creacion: new Date(Date.now() - 22 * 60000).toISOString(),
-    items: [
-      { id: 5, producto_nombre: 'Tasty Bacon BBQ Crispy', cantidad: 1, precio_unitario: 9500.00, notas: '' },
-      { id: 6, producto_nombre: 'Volcán de Chocolate con Helado', cantidad: 1, precio_unitario: 4200.00, notas: '' }
-    ]
-  }
-];
+// Iniciar la comanda de la cocina completamente limpia (sin pedidos de prueba predeterminados)
+export const INITIAL_ORDERS = [];
