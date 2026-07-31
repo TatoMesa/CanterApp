@@ -9,7 +9,8 @@ import KdsBoard from './components/kitchen/KdsBoard';
 import ProductManagerModal from './components/kitchen/ProductManagerModal';
 import KitchenAuthGate from './components/kitchen/KitchenAuthGate';
 
-import { INITIAL_CATEGORIES, INITIAL_PRODUCTS, INITIAL_ORDERS } from './services/mockData';
+import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from './services/mockData';
+import { fetchProductos, fetchPedidosCocina, crearPedidoAPI, cambiarEstadoPedidoAPI } from './services/api';
 
 export default function App() {
   // Determine view based on URL path or hash
@@ -22,40 +23,52 @@ export default function App() {
     return 'client';
   };
 
-  const [activeView, setActiveView] = useState(getInitialView); // 'client' | 'kitchen'
+  const [activeView, setActiveView] = useState(getInitialView);
   const [isKitchenAuthenticated, setIsKitchenAuthenticated] = useState(false);
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
-  // Cargar pedidos almacenados o iniciar en blanco
+  const [categories] = useState(INITIAL_CATEGORIES);
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [cart, setCart] = useState([]);
+  
+  // Limpiar memoria caché previa si contenía los datos de prueba viejos
   const getInitialOrders = () => {
     try {
       const saved = localStorage.getItem('canterapp_orders');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Si tiene los IDs de muestra antiguos 1042/1043, descartarlos y limpiar
+        if (parsed.some(o => o.id === 1042 || o.id === 1043 || o.id === 1044)) {
+          localStorage.removeItem('canterapp_orders');
+          return [];
+        }
+        return parsed;
       }
     } catch (e) {
-      console.warn('Error leyendo localStorage orders', e);
+      console.warn('Error leyendo localStorage', e);
     }
-    return INITIAL_ORDERS;
+    return [];
   };
 
   const getInitialHistory = () => {
     try {
       const saved = localStorage.getItem('canterapp_history');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed.some(o => o.id === 1042 || o.id === 1043 || o.id === 1044)) {
+          localStorage.removeItem('canterapp_history');
+          return [];
+        }
+        return parsed;
       }
     } catch (e) {
-      console.warn('Error leyendo localStorage history', e);
+      console.warn('Error leyendo history', e);
     }
     return [];
   };
 
-  const [categories] = useState(INITIAL_CATEGORIES);
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
-  const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState(getInitialOrders);
   const [allOrdersHistory, setAllOrdersHistory] = useState(getInitialHistory);
 
@@ -63,22 +76,39 @@ export default function App() {
   const [activeTrackedOrder, setActiveTrackedOrder] = useState(null);
   const [isProductManagerOpen, setIsProductManagerOpen] = useState(false);
 
-  // Guardar cambios de pedidos en localStorage
+  // Polling / Sincronización en tiempo real con el servidor Django
+  const syncOrdersWithServer = async () => {
+    const apiOrders = await fetchPedidosCocina();
+    if (apiOrders && Array.isArray(apiOrders)) {
+      setOrders(apiOrders);
+      // Actualizar también en el historial
+      setAllOrdersHistory(prev => {
+        const map = new Map();
+        prev.forEach(o => map.set(o.id, o));
+        apiOrders.forEach(o => map.set(o.id, o));
+        return Array.from(map.values());
+      });
+    }
+  };
+
+  useEffect(() => {
+    syncOrdersWithServer();
+    // Polling cada 3 segundos para sincronizar la cocina con los pedidos de clientes
+    const interval = setInterval(syncOrdersWithServer, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Guardar en localStorage
   useEffect(() => {
     try {
       localStorage.setItem('canterapp_orders', JSON.stringify(orders));
-    } catch (e) {
-      console.warn('Error guardando en localStorage', e);
-    }
+    } catch (e) {}
   }, [orders]);
 
-  // Guardar historial completo de pedidos para estadísticas
   useEffect(() => {
     try {
       localStorage.setItem('canterapp_history', JSON.stringify(allOrdersHistory));
-    } catch (e) {
-      console.warn('Error guardando historial', e);
-    }
+    } catch (e) {}
   }, [allOrdersHistory]);
 
   // Sync URL changes
@@ -127,12 +157,14 @@ export default function App() {
     });
   };
 
-  // Submit new order from Client Checkout
-  const handleSubmitOrder = (newOrderData) => {
-    const createdOrder = {
+  // Submit new order from Client Checkout to Django API
+  const handleSubmitOrder = async (newOrderData) => {
+    // Intentar enviar al backend Django
+    const apiResult = await crearPedidoAPI(newOrderData);
+
+    const createdOrder = apiResult || {
       id: Math.floor(1000 + Math.random() * 9000),
       ...newOrderData,
-      // Los pedidos con Mercado Pago inician con estado de pago PENDIENTE
       estado_pago: 'PENDIENTE',
       estado_pedido: 'PENDIENTE',
       fecha_creacion: new Date().toISOString()
@@ -145,7 +177,10 @@ export default function App() {
   };
 
   // Kitchen KDS Order State Transition
-  const handleUpdateOrderStatus = (orderId, newStatus) => {
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    // Notificar al backend Django
+    await cambiarEstadoPedidoAPI(orderId, newStatus);
+
     setOrders((prevOrders) =>
       prevOrders
         .map((ord) => {
@@ -158,7 +193,6 @@ export default function App() {
           }
           return ord;
         })
-        // Al marcar como ENTREGADO, quitar el pedido de las comandas activas de cocina
         .filter((ord) => ord.estado_pedido !== 'ENTREGADO')
     );
   };
@@ -192,9 +226,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {activeView === 'client' ? (
-        /* ROL CLIENTE - VISTA MÓVIL ESTILO PEDIDOSYA (SIN LINK A COCINA) */
+        /* ROL CLIENTE - VISTA MÓVIL ESTILO PEDIDOSYA */
         <main className="flex-1 pb-28">
-          {/* Top Navbar Header */}
           <Header
             searchKeyword={searchKeyword}
             setSearchKeyword={setSearchKeyword}
@@ -203,7 +236,6 @@ export default function App() {
             cartCount={totalCartItems}
           />
 
-          {/* Horizontally scrollable top category chips */}
           <CategorySelector
             categories={categories}
             activeCategory={activeCategory}
@@ -230,7 +262,7 @@ export default function App() {
                       Seguimiento Pedido #{activeTrackedOrder.id}
                     </span>
                     <span className="text-[11px] font-bold opacity-90">
-                      Estado: {activeTrackedOrder.estado_pedido.replace(/_/g, ' ')}
+                      Estado: {activeTrackedOrder.estado_pedido?.replace(/_/g, ' ')}
                     </span>
                   </div>
                 </div>
