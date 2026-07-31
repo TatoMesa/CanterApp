@@ -38,13 +38,26 @@ export default function App() {
     } catch (e) {
       console.warn('Error leyendo localStorage orders', e);
     }
-    return INITIAL_ORDERS; // Array vacío []
+    return INITIAL_ORDERS;
+  };
+
+  const getInitialHistory = () => {
+    try {
+      const saved = localStorage.getItem('canterapp_history');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn('Error leyendo localStorage history', e);
+    }
+    return [];
   };
 
   const [categories] = useState(INITIAL_CATEGORIES);
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState(getInitialOrders);
+  const [allOrdersHistory, setAllOrdersHistory] = useState(getInitialHistory);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeTrackedOrder, setActiveTrackedOrder] = useState(null);
@@ -58,6 +71,15 @@ export default function App() {
       console.warn('Error guardando en localStorage', e);
     }
   }, [orders]);
+
+  // Guardar historial completo de pedidos para estadísticas
+  useEffect(() => {
+    try {
+      localStorage.setItem('canterapp_history', JSON.stringify(allOrdersHistory));
+    } catch (e) {
+      console.warn('Error guardando historial', e);
+    }
+  }, [allOrdersHistory]);
 
   // Sync URL changes
   useEffect(() => {
@@ -117,6 +139,7 @@ export default function App() {
     };
 
     setOrders((prev) => [createdOrder, ...prev]);
+    setAllOrdersHistory((prev) => [createdOrder, ...prev]);
     setCart([]);
     setActiveTrackedOrder(createdOrder);
   };
@@ -310,6 +333,7 @@ export default function App() {
 
               <KdsBoard
                 orders={orders}
+                allOrdersHistory={allOrdersHistory}
                 onUpdateOrderStatus={handleUpdateOrderStatus}
                 onOpenProductManager={() => setIsProductManagerOpen(true)}
               />
