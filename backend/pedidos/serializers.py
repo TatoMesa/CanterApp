@@ -8,7 +8,7 @@ class CategoriaSerializer(serializers.ModelSerializer):
 
 
 class ProductoSerializer(serializers.ModelSerializer):
-    categoria_nombre = serializers.ReadOnlyField(source='categoria.nombre')
+    categoria_nombre = serializers.ReadOnlyField(source='categoria.nombre', default='General')
     imagen_final = serializers.ReadOnlyField(source='get_imagen')
 
     class Meta:
@@ -21,15 +21,12 @@ class ProductoSerializer(serializers.ModelSerializer):
 
 
 class ItemPedidoSerializer(serializers.ModelSerializer):
-    producto_nombre = serializers.ReadOnlyField(source='producto.nombre')
-    producto_id = serializers.PrimaryKeyRelatedField(
-        queryset=Producto.objects.all(), source='producto'
-    )
-    subtotal = serializers.ReadOnlyField()
+    producto_nombre = serializers.CharField(required=False, allow_blank=True)
+    producto_id = serializers.IntegerField(required=False, write_only=True)
 
     class Meta:
         model = ItemPedido
-        fields = ['id', 'producto_id', 'producto_nombre', 'cantidad', 'precio_unitario', 'notas', 'subtotal']
+        fields = ['id', 'producto_id', 'producto_nombre', 'cantidad', 'precio_unitario', 'notas']
 
 
 class PedidoCreateSerializer(serializers.ModelSerializer):
@@ -45,16 +42,33 @@ class PedidoCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         
-        # Crear pedido inicialmente con total 0
+        # Obtener o crear una categoría por defecto si no hay
+        cat_default, _ = Categoria.objects.get_or_create(
+            id=1,
+            defaults={'nombre': 'General', 'icono': 'Utensils', 'orden': 0, 'activa': True}
+        )
+
         pedido = Pedido.objects.create(**validated_data)
         
         total = 0
         for item_data in items_data:
-            producto = item_data['producto']
-            cantidad = item_data['cantidad']
-            precio = producto.precio  # Usar precio actual del producto
+            prod_id = item_data.get('producto_id', 1)
+            prod_nombre = item_data.get('producto_nombre', 'Producto')
+            precio = item_data.get('precio_unitario', 0.00)
+            cantidad = item_data.get('cantidad', 1)
             notas = item_data.get('notas', '')
-            
+
+            # Buscar producto existente o crearlo dinámicamente si es necesario
+            producto = Producto.objects.filter(id=prod_id).first()
+            if not producto:
+                producto = Producto.objects.create(
+                    id=prod_id if isinstance(prod_id, int) and prod_id < 1000000 else None,
+                    categoria=cat_default,
+                    nombre=prod_nombre,
+                    precio=precio,
+                    disponible=True
+                )
+
             ItemPedido.objects.create(
                 pedido=pedido,
                 producto=producto,
@@ -62,7 +76,7 @@ class PedidoCreateSerializer(serializers.ModelSerializer):
                 precio_unitario=precio,
                 notas=notas
             )
-            total += precio * cantidad
+            total += float(precio) * cantidad
 
         pedido.total = total
         pedido.save()

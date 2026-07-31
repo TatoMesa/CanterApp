@@ -77,6 +77,19 @@ export default function KdsBoard({ orders, allOrdersHistory = [], onUpdateOrderS
           </div>
 
           <button
+            onClick={() => {
+              if (window.confirm('¿Deseas borrar la memoria caché de pedidos antiguos del navegador?')) {
+                localStorage.clear();
+                window.location.reload();
+              }
+            }}
+            className="shrink-0 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-colors border border-slate-700"
+            title="Borrar memoria caché de pedidos antiguos"
+          >
+            🧹 Resetear Caché
+          </button>
+
+          <button
             onClick={onOpenProductManager}
             className="shrink-0 px-3.5 py-2 bg-gradient-to-r from-brand-primary to-brand-accent hover:from-brand-dark hover:to-brand-primary text-white rounded-xl text-xs font-extrabold shadow-glow-red flex items-center justify-center gap-1.5 transition-all touch-active"
           >
