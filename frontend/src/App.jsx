@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { soundAlert } from './services/soundAlert';
 import Header from './components/client/Header';
 import CategorySelector from './components/client/CategorySelector';
 import ProductCard from './components/client/ProductCard';
@@ -130,6 +131,23 @@ export default function App() {
     const interval = setInterval(syncOrdersWithServer, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // *** Notificación global: suena SIEMPRE cuando el pedido está listo, modal abierto o cerrado ***
+  const prevTrackedStatus = useRef(activeTrackedOrder?.estado_pedido);
+  useEffect(() => {
+    if (!activeTrackedOrder) return;
+    const currentStatus = activeTrackedOrder.estado_pedido;
+    if (
+      currentStatus === 'LISTO_PARA_RETIRAR' &&
+      prevTrackedStatus.current !== 'LISTO_PARA_RETIRAR'
+    ) {
+      // Sonido + vibración
+      soundAlert.playReadyAlert();
+      // Abrir el modal automáticamente para que el cliente vea el aviso
+      setActiveTrackedOrder({ ...activeTrackedOrder });
+    }
+    prevTrackedStatus.current = currentStatus;
+  }, [activeTrackedOrder?.estado_pedido]);
 
   // Guardar en localStorage
   useEffect(() => {
