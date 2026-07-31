@@ -7,15 +7,23 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Poblando categorías y productos...")
 
-        cat_burgers, _ = Categoria.objects.get_or_create(nombre='Hamburguesas', defaults={'icono': 'Beef', 'orden': 1})
+        # Renombrar o crear categoría Sándwich
+        cat_burgers = Categoria.objects.filter(nombre__in=['Hamburguesas', 'Burgers']).first()
+        if cat_burgers:
+            cat_burgers.nombre = 'Sándwich'
+            cat_burgers.icono = 'Utensils'
+            cat_burgers.save()
+        else:
+            cat_burgers, _ = Categoria.objects.get_or_create(nombre='Sándwich', defaults={'icono': 'Utensils', 'orden': 1})
+
         cat_pizzas, _ = Categoria.objects.get_or_create(nombre='Pizzas & Mozza', defaults={'icono': 'Pizza', 'orden': 2})
         cat_empanadas, _ = Categoria.objects.get_or_create(nombre='Empanadas', defaults={'icono': 'Flame', 'orden': 3})
         cat_drinks, _ = Categoria.objects.get_or_create(nombre='Bebidas', defaults={'icono': 'CupSoda', 'orden': 4})
         cat_desserts, _ = Categoria.objects.get_or_create(nombre='Postres', defaults={'icono': 'IceCream', 'orden': 5})
 
         prods = [
-            (101, cat_burgers, 'Smash Double Cheese Burger', 'Doble medalla smash 120g, cheddar, bacon y salsa Canter.', 8900.00, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600'),
-            (102, cat_burgers, 'Tasty Bacon BBQ Crispy', 'Medalla vacuna 180g, queso muzzarella, aros de cebolla y bbq.', 9500.00, 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=600'),
+            (101, cat_burgers, 'Smash Double Cheese Sandwich', 'Doble medalla smash 120g, cheddar, bacon y salsa Canter.', 8900.00, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600'),
+            (102, cat_burgers, 'Tasty Bacon BBQ Crispy Sandwich', 'Medalla vacuna 180g, queso muzzarella, aros de cebolla y bbq.', 9500.00, 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=600'),
             (103, cat_pizzas, 'Pizza Napolitana Premium', 'Salsa de tomate italiano, doble mozzarella y albahaca.', 11200.00, 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600'),
             (104, cat_pizzas, 'Fugazzeta Rellena de Queso', 'Masa de fermentación lenta rellena de queso cremoso y cebolla.', 12500.00, 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600'),
             (105, cat_empanadas, 'Empanada Carne Cortada a Cuchillo', 'Carne jugosa salteada con cebolla, morrón y huevo.', 1400.00, 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=600'),
@@ -38,4 +46,4 @@ class Command(BaseCommand):
                 }
             )
 
-        self.stdout.write(self.style.SUCCESS("✅ Base de datos poblada exitosamente."))
+        self.stdout.write(self.style.SUCCESS("✅ Base de datos poblada exitosamente con categoría Sándwich."))

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { X, Plus, Edit2, Check, Power, DollarSign, Image, Tag } from 'lucide-react';
+import { X, Plus, Edit2, Check, Power, Tag, Trash2 } from 'lucide-react';
 
-export default function ProductManagerModal({ isOpen, onClose, products, categories, onSaveProduct, onToggleAvailability }) {
+export default function ProductManagerModal({ isOpen, onClose, products, categories, onSaveProduct, onToggleAvailability, onDeleteProduct }) {
   if (!isOpen) return null;
 
   const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '',
-    categoria: 'burgers',
+    categoria: categories[1]?.id || 'burgers',
     precio: '',
     descripcion: '',
     imagen_final: ''
@@ -19,8 +19,8 @@ export default function ProductManagerModal({ isOpen, onClose, products, categor
       nombre: prod.nombre,
       categoria: prod.categoria,
       precio: prod.precio,
-      descripcion: prod.descripcion,
-      imagen_final: prod.imagen_final
+      descripcion: prod.descripcion || '',
+      imagen_final: prod.imagen_final || prod.imagen_url || ''
     });
   };
 
@@ -41,6 +41,7 @@ export default function ProductManagerModal({ isOpen, onClose, products, categor
 
     const savedProd = {
       id: editingProduct.isNew ? Date.now() : editingProduct.id,
+      isNew: editingProduct.isNew,
       nombre: formData.nombre,
       categoria: formData.categoria,
       precio: parseFloat(formData.precio),
@@ -63,7 +64,7 @@ export default function ProductManagerModal({ isOpen, onClose, products, categor
             <h2 className="font-extrabold text-white text-lg flex items-center gap-2">
               <Tag className="w-5 h-5 text-brand-primary" /> Gestión de Productos del Menú (CRUD)
             </h2>
-            <p className="text-xs text-slate-400 font-medium">Añade, edita precios o pausa platos del catálogo</p>
+            <p className="text-xs text-slate-400 font-medium">Añade, edita precios, gestiona fotos o elimina platos del menú</p>
           </div>
           <button
             onClick={onClose}
@@ -99,7 +100,7 @@ export default function ProductManagerModal({ isOpen, onClose, products, categor
                     required
                     value={formData.nombre}
                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                    placeholder="Ej: Hamburguesa Triple Cheddar"
+                    placeholder="Ej: Sándwich Triple Cheddar"
                     className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-brand-primary"
                   />
                 </div>
@@ -184,16 +185,16 @@ export default function ProductManagerModal({ isOpen, onClose, products, categor
                     className="p-3 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-between gap-3 hover:border-slate-700 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <img src={prod.imagen_final} alt={prod.nombre} className="w-10 h-10 rounded-xl object-cover shrink-0" />
+                      <img src={prod.imagen_final || prod.imagen_url} alt={prod.nombre} className="w-10 h-10 rounded-xl object-cover shrink-0" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-bold text-xs text-white truncate">{prod.nombre}</h4>
                           <span className="text-[10px] bg-slate-800 text-slate-400 font-semibold px-2 py-0.5 rounded-full capitalize">
-                            {prod.categoria}
+                            {prod.categoria_nombre || prod.categoria}
                           </span>
                         </div>
                         <p className="text-xs font-extrabold text-amber-400 mt-0.5">
-                          ${prod.precio.toLocaleString('es-AR')}
+                          ${Number(prod.precio).toLocaleString('es-AR')}
                         </p>
                       </div>
                     </div>
@@ -201,7 +202,7 @@ export default function ProductManagerModal({ isOpen, onClose, products, categor
                     <div className="flex items-center gap-2 shrink-0">
                       {/* Availability Toggle Switch */}
                       <button
-                        onClick={() => onToggleAvailability(prod.id)}
+                        onClick={() => onToggleAvailability(prod.id, !prod.disponible)}
                         className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1 transition-all ${
                           prod.disponible
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30'
@@ -221,6 +222,21 @@ export default function ProductManagerModal({ isOpen, onClose, products, categor
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
+
+                      {/* Delete Button */}
+                      {onDeleteProduct && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`¿Seguro que deseas eliminar "${prod.nombre}"?`)) {
+                              onDeleteProduct(prod.id);
+                            }
+                          }}
+                          className="w-7 h-7 rounded-xl bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 flex items-center justify-center transition-colors"
+                          title="Eliminar producto"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

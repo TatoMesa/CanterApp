@@ -11,7 +11,16 @@ import ProductManagerModal from './components/kitchen/ProductManagerModal';
 import KitchenAuthGate from './components/kitchen/KitchenAuthGate';
 
 import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from './services/mockData';
-import { fetchProductos, fetchPedidosCocina, crearPedidoAPI, cambiarEstadoPedidoAPI } from './services/api';
+import { 
+  fetchProductos, 
+  fetchCategorias, 
+  fetchPedidosCocina, 
+  crearPedidoAPI, 
+  cambiarEstadoPedidoAPI,
+  guardarProductoAPI,
+  toggleDisponibilidadAPI,
+  eliminarProductoAPI
+} from './services/api';
 
 export default function App() {
   // Determine view based on URL path or hash
@@ -30,7 +39,7 @@ export default function App() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
-  const [categories] = useState(INITIAL_CATEGORIES);
+  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [cart, setCart] = useState([]);
   
@@ -263,29 +272,63 @@ export default function App() {
     );
   };
 
-  // Product Manager CRUD
-  const handleSaveProduct = (savedProduct) => {
-    setProducts((prev) => {
-      const exists = prev.some((p) => p.id === savedProduct.id);
-      if (exists) {
-        return prev.map((p) => (p.id === savedProduct.id ? savedProduct : p));
+  // Cargar catálogo de productos y categorías reales desde el backend Django
+  useEffect(() => {
+    async function loadCatalog() {
+      const apiProds = await fetchProductos();
+      if (apiProds && Array.isArray(apiProds) && apiProds.length > 0) {
+        setProducts(apiProds);
       }
-      return [savedProduct, ...prev];
+      const apiCats = await fetchCategorias();
+      if (apiCats && Array.isArray(apiCats) && apiCats.length > 0) {
+        setCategories([
+          { id: 'all', nombre: 'Todas', icono: 'Utensils' },
+          ...apiCats.map(c => ({ id: c.id, nombre: c.nombre, icono: c.icono || 'Utensils' }))
+        ]);
+      }
+    }
+    loadCatalog();
+  }, []);
+
+  // Product Manager CRUD con backend Django
+  const handleSaveProduct = async (savedProduct) => {
+    const res = await guardarProductoAPI(savedProduct);
+    const updatedProd = res || savedProduct;
+
+    setProducts((prev) => {
+      const exists = prev.some((p) => p.id === updatedProd.id || (savedProduct.id && p.id === savedProduct.id));
+      if (exists) {
+        return prev.map((p) => (p.id === updatedProd.id || p.id === savedProduct.id ? updatedProd : p));
+      }
+      return [updatedProd, ...prev];
     });
   };
 
-  const handleToggleAvailability = (productId) => {
+  const handleToggleAvailability = async (productId, nextStatus) => {
+    await toggleDisponibilidadAPI(productId, nextStatus);
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, disponible: !p.disponible } : p))
+      prev.map((p) => (p.id === productId ? { ...p, disponible: nextStatus } : p))
     );
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    await eliminarProductoAPI(productId);
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
   };
 
   // Filtered products for client menu
   const filteredProducts = products.filter((prod) => {
-    const matchesCategory = activeCategory === 'all' || prod.categoria === activeCategory;
+    const matchesCategory =
+      activeCategory === 'all' ||
+      prod.categoria === activeCategory ||
+      prod.categoria_id === activeCategory ||
+      (typeof activeCategory === 'string' && prod.categoria_nombre?.toLowerCase().includes(activeCategory.toLowerCase())) ||
+      (activeCategory === 'burgers' && (prod.categoria_nombre === 'Sándwich' || prod.categoria_nombre === 'Hamburguesas'));
+
     const matchesSearch =
-      prod.nombre.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      prod.descripcion.toLowerCase().includes(searchKeyword.toLowerCase());
+      prod.nombre?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      prod.descripcion?.toLowerCase().includes(searchKeyword.toLowerCase());
+
     return matchesCategory && matchesSearch;
   });
 
@@ -445,6 +488,7 @@ export default function App() {
                 categories={categories}
                 onSaveProduct={handleSaveProduct}
                 onToggleAvailability={handleToggleAvailability}
+                onDeleteProduct={handleDeleteProduct}
               />
             </>
           )}

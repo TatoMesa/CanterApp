@@ -40,7 +40,7 @@ export async function crearPedidoAPI(pedidoData) {
     const payload = {
       cliente_nombre: pedidoData.cliente_nombre || 'Cliente',
       telefono: pedidoData.telefono || '1100000000',
-      mesa_o_direccion: pedidoData.mesa_o_direccion || 'Mesa 1',
+      mesa_o_direccion: pedidoData.mesa_o_direccion || 'Retira en mostrador',
       notas_cocina: pedidoData.notas_cocina || '',
       metodo_pago: pedidoData.metodo_pago || 'EFECTIVO',
       items: pedidoData.items.map(item => ({
@@ -84,5 +84,74 @@ export async function cambiarEstadoPedidoAPI(pedidoId, nuevoEstado) {
   } catch (e) {
     console.warn('API Error (cambiarEstadoPedidoAPI):', e);
     return null;
+  }
+}
+
+// *** CRUD DE PRODUCTOS (Backend Django Sync) ***
+
+export async function guardarProductoAPI(productData) {
+  try {
+    const isNew = !productData.id || productData.isNew || typeof productData.id !== 'number' || productData.id > 1000000;
+    const url = isNew ? `${API_BASE}/productos/` : `${API_BASE}/productos/${productData.id}/`;
+    const method = isNew ? 'POST' : 'PUT';
+
+    // Asegurar ID de categoría válido
+    let catId = 1;
+    if (typeof productData.categoria === 'number') {
+      catId = productData.categoria;
+    }
+
+    const payload = {
+      categoria: catId,
+      nombre: productData.nombre,
+      descripcion: productData.descripcion || '',
+      precio: parseFloat(productData.precio || 0).toFixed(2),
+      imagen_url: productData.imagen_final || productData.imagen_url || '',
+      disponible: productData.disponible !== undefined ? productData.disponible : true
+    };
+
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('Error guardando producto:', errText);
+      alert('Error en el servidor al guardar el producto: ' + errText);
+      return null;
+    }
+    return await res.json();
+  } catch (e) {
+    console.error('API Error (guardarProductoAPI):', e);
+    return null;
+  }
+}
+
+export async function toggleDisponibilidadAPI(productId, disponible) {
+  try {
+    const res = await fetch(`${API_BASE}/productos/${productId}/`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ disponible })
+    });
+    if (!res.ok) throw new Error('Error cambiando disponibilidad');
+    return await res.json();
+  } catch (e) {
+    console.warn('API Error (toggleDisponibilidadAPI):', e);
+    return null;
+  }
+}
+
+export async function eliminarProductoAPI(productId) {
+  try {
+    const res = await fetch(`${API_BASE}/productos/${productId}/`, {
+      method: 'DELETE'
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('API Error (eliminarProductoAPI):', e);
+    return false;
   }
 }

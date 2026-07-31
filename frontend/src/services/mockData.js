@@ -1,6 +1,6 @@
 export const INITIAL_CATEGORIES = [
   { id: 'all', nombre: 'Todas', icono: 'Utensils' },
-  { id: 'burgers', nombre: 'Hamburguesas', icono: 'Beef' },
+  { id: 'burgers', nombre: 'Sándwich', icono: 'Utensils' },
   { id: 'pizzas', nombre: 'Pizzas & Mozza', icono: 'Pizza' },
   { id: 'empanadas', nombre: 'Empanadas', icono: 'Flame' },
   { id: 'drinks', nombre: 'Bebidas', icono: 'CupSoda' },
@@ -11,7 +11,7 @@ export const INITIAL_PRODUCTS = [
   {
     id: 101,
     categoria: 'burgers',
-    nombre: 'Smash Double Cheese Burger',
+    nombre: 'Smash Double Cheese Sandwich',
     descripcion: 'Doble medalla de carne smash 120g, doble cheddar inglés, bacon crocante y salsa Canter secreta en pan brioche.',
     precio: 8900.00,
     imagen_final: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
@@ -20,7 +20,7 @@ export const INITIAL_PRODUCTS = [
   {
     id: 102,
     categoria: 'burgers',
-    nombre: 'Tasty Bacon BBQ Crispy',
+    nombre: 'Tasty Bacon BBQ Crispy Sandwich',
     descripcion: 'Medalla vacuna 180g, queso muzzarella fundido, aros de cebolla empanados, bacon ahumado y salsa barbacoa agridulce.',
     precio: 9500.00,
     imagen_final: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=600&q=80',
