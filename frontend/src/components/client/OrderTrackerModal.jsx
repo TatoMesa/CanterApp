@@ -165,15 +165,41 @@ export default function OrderTrackerModal({ activeOrder, onClose }) {
               ))}
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 font-extrabold text-xs">
-              <span className="text-slate-600">Método de Pago:</span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] ${
-                activeOrder.metodo_pago === 'MERCADO_PAGO'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-amber-100 text-amber-800'
-              }`}>
-                {activeOrder.metodo_pago === 'MERCADO_PAGO' ? 'Mercado Pago (Pagado)' : 'Efectivo en Mostrador'}
-              </span>
+            <div className="flex flex-col gap-2 pt-2 border-t border-slate-200/60 text-xs">
+              <div className="flex items-center justify-between font-extrabold">
+                <span className="text-slate-600">Método de Pago:</span>
+                <span className={`px-2.5 py-1 rounded-full text-[10px] ${
+                  activeOrder.metodo_pago === 'MERCADO_PAGO'
+                    ? activeOrder.estado_pago === 'PAGADO'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    : 'bg-slate-200 text-slate-800'
+                }`}>
+                  {activeOrder.metodo_pago === 'MERCADO_PAGO'
+                    ? activeOrder.estado_pago === 'PAGADO' ? '✅ Mercado Pago (PAGADO)' : '⏳ Mercado Pago (PAGO PENDIENTE)'
+                    : '💵 Efectivo (Cobro en Mostrador)'}
+                </span>
+              </div>
+
+              {/* Botón de pago / simulación de pasarela MP */}
+              {activeOrder.metodo_pago === 'MERCADO_PAGO' && activeOrder.estado_pago !== 'PAGADO' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center space-y-2 mt-1">
+                  <p className="text-[11px] font-bold text-blue-900">
+                    💳 Tu pago aún no ha sido procesado en la app de Mercado Pago.
+                  </p>
+                  <button
+                    onClick={() => {
+                      activeOrder.estado_pago = 'PAGADO';
+                      alert('Simulación de Mercado Pago: ¡Pago de ARS $' + activeOrder.total.toLocaleString('es-AR') + ' Aprobado!');
+                      // Trigger state refresh
+                      window.dispatchEvent(new Event('storage'));
+                    }}
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-lg shadow-sm transition-colors"
+                  >
+                    👉 Pagar / Simular Aprobación con Mercado Pago
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

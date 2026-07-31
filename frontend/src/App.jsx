@@ -110,7 +110,8 @@ export default function App() {
     const createdOrder = {
       id: Math.floor(1000 + Math.random() * 9000),
       ...newOrderData,
-      estado_pago: newOrderData.metodo_pago === 'MERCADO_PAGO' ? 'PAGADO' : 'PENDIENTE',
+      // Los pedidos con Mercado Pago inician con estado de pago PENDIENTE
+      estado_pago: 'PENDIENTE',
       estado_pedido: 'PENDIENTE',
       fecha_creacion: new Date().toISOString()
     };
@@ -118,10 +119,6 @@ export default function App() {
     setOrders((prev) => [createdOrder, ...prev]);
     setCart([]);
     setActiveTrackedOrder(createdOrder);
-
-    if (newOrderData.metodo_pago === 'MERCADO_PAGO') {
-      alert(`Redirigiendo a la pasarela de Mercado Pago para pagar ARS $${newOrderData.total.toLocaleString('es-AR')}... (Simulación Aprobada)`);
-    }
   };
 
   // Kitchen KDS Order State Transition

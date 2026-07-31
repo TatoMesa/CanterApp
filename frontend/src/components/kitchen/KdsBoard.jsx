@@ -117,13 +117,19 @@ export default function KdsBoard({ orders, onUpdateOrderStatus, onOpenProductMan
 
                   {/* Payment Badge */}
                   <div className="flex items-center justify-between pt-1">
-                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                    <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1 ${
                       order.metodo_pago === 'MERCADO_PAGO'
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                        ? order.estado_pago === 'PAGADO'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : 'bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse'
                         : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                     }`}>
                       {order.metodo_pago === 'MERCADO_PAGO' ? (
-                        <> <CreditCard className="w-3 h-3" /> MP (Pagado) </>
+                        order.estado_pago === 'PAGADO' ? (
+                          <> <CreditCard className="w-3 h-3" /> ✅ MP (PAGADO) </>
+                        ) : (
+                          <> <CreditCard className="w-3 h-3" /> 🔴 MP (PAGO PENDIENTE) </>
+                        )
                       ) : (
                         <> <Banknote className="w-3 h-3" /> Efectivo (${formatCurrency(order.total)}) </>
                       )}
