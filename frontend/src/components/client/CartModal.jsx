@@ -6,7 +6,7 @@ export default function CartModal({ isOpen, onClose, cart, setCart, onSubmitOrde
 
   const [clienteNombre, setClienteNombre] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [mesaODireccion, setMesaODireccion] = useState('Mesa 1');
+  const [mesaODireccion, setMesaODireccion] = useState('Retira en mostrador');
   const [notasCocina, setNotasCocina] = useState('');
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [isSubmitting, setIsSubmitting] = useState(false);
