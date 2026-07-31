@@ -73,8 +73,28 @@ export default function App() {
   const [allOrdersHistory, setAllOrdersHistory] = useState(getInitialHistory);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [activeTrackedOrder, setActiveTrackedOrder] = useState(null);
   const [isProductManagerOpen, setIsProductManagerOpen] = useState(false);
+
+  // Persistir el pedido rastreado para que sobreviva un refresh de página
+  const getInitialTrackedOrder = () => {
+    try {
+      const saved = localStorage.getItem('canterapp_tracked_order');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return null;
+  };
+  const [activeTrackedOrder, setActiveTrackedOrder] = useState(getInitialTrackedOrder);
+
+  // Guardar pedido rastreado en localStorage cada vez que cambie
+  useEffect(() => {
+    try {
+      if (activeTrackedOrder) {
+        localStorage.setItem('canterapp_tracked_order', JSON.stringify(activeTrackedOrder));
+      } else {
+        localStorage.removeItem('canterapp_tracked_order');
+      }
+    } catch (e) {}
+  }, [activeTrackedOrder]);
 
   // Polling / Sincronización en tiempo real con el servidor Django
   const syncOrdersWithServer = async () => {
@@ -92,6 +112,14 @@ export default function App() {
         prev.forEach(o => map.set(o.id, o));
         apiOrders.forEach(o => map.set(o.id, o));
         return Array.from(map.values());
+      });
+
+      // *** CLAVE: Actualizar el pedido rastreado del cliente en tiempo real ***
+      setActiveTrackedOrder(prev => {
+        if (!prev) return null;
+        const updated = apiOrders.find(o => o.id === prev.id);
+        if (updated) return updated; // Actualizar con el estado nuevo del servidor
+        return prev; // Mantener el actual si ya fue entregado (desapareció del endpoint cocina)
       });
     }
   };
