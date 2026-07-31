@@ -74,6 +74,7 @@ export default function App() {
   const [allOrdersHistory, setAllOrdersHistory] = useState(getInitialHistory);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isTrackerModalOpen, setIsTrackerModalOpen] = useState(false);
   const [isProductManagerOpen, setIsProductManagerOpen] = useState(false);
 
   // Persistir el pedido rastreado para que sobreviva un refresh de página
@@ -144,7 +145,7 @@ export default function App() {
       // Sonido + vibración
       soundAlert.playReadyAlert();
       // Abrir el modal automáticamente para que el cliente vea el aviso
-      setActiveTrackedOrder({ ...activeTrackedOrder });
+      setIsTrackerModalOpen(true);
     }
     prevTrackedStatus.current = currentStatus;
   }, [activeTrackedOrder?.estado_pedido]);
@@ -225,6 +226,7 @@ export default function App() {
     setAllOrdersHistory((prev) => [createdOrder, ...prev]);
     setCart([]);
     setActiveTrackedOrder(createdOrder);
+    setIsTrackerModalOpen(true);
   };
 
   // Kitchen KDS Order State Transition
@@ -297,7 +299,7 @@ export default function App() {
           <div className="max-w-md mx-auto px-4 mt-3">
             {activeTrackedOrder ? (
               <button
-                onClick={() => setIsCartOpen(false) || setActiveTrackedOrder(activeTrackedOrder)}
+                onClick={() => { setIsCartOpen(false); setIsTrackerModalOpen(true); }}
                 className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between shadow-xs transition-all ${
                   activeTrackedOrder.estado_pedido === 'LISTO_PARA_RETIRAR'
                     ? 'bg-emerald-50 border-emerald-400 text-emerald-900 animate-bounce-subtle shadow-glow-green'
@@ -386,10 +388,12 @@ export default function App() {
           />
 
           {/* Live Order Tracker Modal */}
-          <OrderTrackerModal
-            activeOrder={activeTrackedOrder}
-            onClose={() => setActiveTrackedOrder(null)}
-          />
+          {isTrackerModalOpen && (
+            <OrderTrackerModal
+              activeOrder={activeTrackedOrder}
+              onClose={() => setIsTrackerModalOpen(false)}
+            />
+          )}
         </main>
       ) : (
         /* ROL COCINA / ADMIN - VISTA CON ACCESO RESTRINGIDO (PIN 1234) */
