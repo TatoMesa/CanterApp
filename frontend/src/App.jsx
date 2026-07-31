@@ -120,8 +120,14 @@ export default function App() {
       setActiveTrackedOrder(prev => {
         if (!prev) return null;
         const updated = apiOrders.find(o => o.id === prev.id);
-        if (updated) return updated; // Actualizar con el estado nuevo del servidor
-        return prev; // Mantener el actual si ya fue entregado (desapareció del endpoint cocina)
+        if (updated) return updated;
+        // El pedido ya no está en pedidos activos = fue ENTREGADO o CANCELADO
+        // Marcarlo como entregado para que el cliente lo vea brevemente
+        if (prev.estado_pedido !== 'ENTREGADO') {
+          return { ...prev, estado_pedido: 'ENTREGADO' };
+        }
+        // Ya se mostró como entregado, ahora limpiar
+        return null;
       });
     }
   };
@@ -227,6 +233,13 @@ export default function App() {
     setCart([]);
     setActiveTrackedOrder(createdOrder);
     setIsTrackerModalOpen(true);
+
+    // Si eligió Mercado Pago y la API devolvió un link de pago, redirigir
+    if (apiResult && apiResult.mercado_pago && apiResult.mercado_pago.init_point) {
+      window.open(apiResult.mercado_pago.init_point, '_blank');
+    } else if (apiResult && apiResult.mp_init_point) {
+      window.open(apiResult.mp_init_point, '_blank');
+    }
   };
 
   // Kitchen KDS Order State Transition

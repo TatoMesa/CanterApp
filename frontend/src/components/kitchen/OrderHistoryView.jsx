@@ -6,11 +6,12 @@ export default function OrderHistoryView({ allOrders }) {
   const [paymentFilter, setPaymentFilter] = useState('ALL');
 
   const formatCurrency = (val) => {
+    const num = Number(val) || 0;
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS',
       maximumFractionDigits: 0
-    }).format(val);
+    }).format(num);
   };
 
   const formatDate = (isoStr) => {
@@ -25,18 +26,18 @@ export default function OrderHistoryView({ allOrders }) {
     });
   };
 
-  // KPI Calculations
-  const totalRevenue = allOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  // KPI Calculations (Django DRF DecimalFields come as strings, so we parse them to Float)
+  const totalRevenue = allOrders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
   const totalOrdersCount = allOrders.length;
   const averageTicket = totalOrdersCount > 0 ? totalRevenue / totalOrdersCount : 0;
 
   const mpTotal = allOrders
     .filter(o => o.metodo_pago === 'MERCADO_PAGO')
-    .reduce((sum, o) => sum + (o.total || 0), 0);
+    .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
 
   const cashTotal = allOrders
     .filter(o => o.metodo_pago === 'EFECTIVO')
-    .reduce((sum, o) => sum + (o.total || 0), 0);
+    .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
 
   // Top Selling Items Calculation
   const productStats = {};
@@ -46,8 +47,10 @@ export default function OrderHistoryView({ allOrders }) {
       if (!productStats[name]) {
         productStats[name] = { name, quantity: 0, revenue: 0 };
       }
-      productStats[name].quantity += item.cantidad;
-      productStats[name].revenue += (item.precio_unitario * item.cantidad);
+      const qty = parseInt(item.cantidad) || 1;
+      const unitPrice = parseFloat(item.precio_unitario) || 0;
+      productStats[name].quantity += qty;
+      productStats[name].revenue += (unitPrice * qty);
     });
   });
 

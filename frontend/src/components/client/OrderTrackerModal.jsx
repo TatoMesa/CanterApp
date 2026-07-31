@@ -60,8 +60,18 @@ export default function OrderTrackerModal({ activeOrder, onClose }) {
         {/* Scrollable Tracker Content */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
           
-          {/* Highlight Banner when Ready */}
-          {isReady ? (
+          {/* Highlight Banner based on status */}
+          {isDelivered ? (
+            <div className="bg-slate-50 border-2 border-slate-300 rounded-2xl p-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-slate-700 text-white mx-auto flex items-center justify-center mb-2 shadow-md">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="font-extrabold text-slate-900 text-base">✅ Pedido Entregado</h3>
+              <p className="text-xs font-semibold text-slate-600 mt-1">
+                ¡Gracias por tu compra! Esperamos que disfrutes tu pedido.
+              </p>
+            </div>
+          ) : isReady ? (
             <div className="bg-emerald-50 border-2 border-emerald-500 rounded-2xl p-4 text-center animate-bounce-subtle shadow-glow-green">
               <div className="w-12 h-12 rounded-full bg-emerald-500 text-white mx-auto flex items-center justify-center mb-2 shadow-md">
                 <Bell className="w-6 h-6 animate-bounce" />
