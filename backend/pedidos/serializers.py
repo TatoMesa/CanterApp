@@ -20,17 +20,31 @@ class ProductoSerializer(serializers.ModelSerializer):
         ]
 
 
-class ItemPedidoSerializer(serializers.ModelSerializer):
-    producto_nombre = serializers.CharField(required=False, allow_blank=True)
-    producto_id = serializers.IntegerField(required=False, write_only=True)
+# --- Read serializer: returns producto_nombre from the DB relation ---
+class ItemPedidoReadSerializer(serializers.ModelSerializer):
+    producto_nombre = serializers.SerializerMethodField()
 
     class Meta:
         model = ItemPedido
-        fields = ['id', 'producto_id', 'producto_nombre', 'cantidad', 'precio_unitario', 'notas']
+        fields = ['id', 'producto_nombre', 'cantidad', 'precio_unitario', 'notas']
+
+    def get_producto_nombre(self, obj):
+        if obj.producto:
+            return obj.producto.nombre
+        return 'Producto'
+
+
+# --- Write serializer: accepts producto_id + producto_nombre from frontend ---
+class ItemPedidoWriteSerializer(serializers.Serializer):
+    producto_id = serializers.IntegerField(required=False, default=1)
+    producto_nombre = serializers.CharField(required=False, default='Producto')
+    cantidad = serializers.IntegerField(required=False, default=1)
+    precio_unitario = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
+    notas = serializers.CharField(required=False, default='', allow_blank=True)
 
 
 class PedidoCreateSerializer(serializers.ModelSerializer):
-    items = ItemPedidoSerializer(many=True)
+    items = ItemPedidoWriteSerializer(many=True)
 
     class Meta:
         model = Pedido
@@ -62,7 +76,6 @@ class PedidoCreateSerializer(serializers.ModelSerializer):
             producto = Producto.objects.filter(id=prod_id).first()
             if not producto:
                 producto = Producto.objects.create(
-                    id=prod_id if isinstance(prod_id, int) and prod_id < 1000000 else None,
                     categoria=cat_default,
                     nombre=prod_nombre,
                     precio=precio,
@@ -84,7 +97,7 @@ class PedidoCreateSerializer(serializers.ModelSerializer):
 
 
 class PedidoDetailSerializer(serializers.ModelSerializer):
-    items = ItemPedidoSerializer(many=True, read_only=True)
+    items = ItemPedidoReadSerializer(many=True, read_only=True)
     estado_pedido_display = serializers.ReadOnlyField(source='get_estado_pedido_display')
     estado_pago_display = serializers.ReadOnlyField(source='get_estado_pago_display')
     metodo_pago_display = serializers.ReadOnlyField(source='get_metodo_pago_display')
@@ -99,3 +112,4 @@ class PedidoDetailSerializer(serializers.ModelSerializer):
             'total', 'mp_preference_id', 'mp_init_point',
             'fecha_creacion', 'fecha_actualizacion', 'items'
         ]
+
