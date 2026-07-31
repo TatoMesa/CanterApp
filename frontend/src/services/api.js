@@ -38,15 +38,16 @@ export async function fetchPedidosCocina() {
 export async function crearPedidoAPI(pedidoData) {
   try {
     const payload = {
-      cliente_nombre: pedidoData.cliente_nombre,
-      telefono: pedidoData.telefono,
-      mesa_o_direccion: pedidoData.mesa_o_direccion,
+      cliente_nombre: pedidoData.cliente_nombre || 'Cliente',
+      telefono: pedidoData.telefono || '1100000000',
+      mesa_o_direccion: pedidoData.mesa_o_direccion || 'Mesa 1',
       notas_cocina: pedidoData.notas_cocina || '',
-      metodo_pago: pedidoData.metodo_pago,
+      metodo_pago: pedidoData.metodo_pago || 'EFECTIVO',
       items: pedidoData.items.map(item => ({
-        producto_id: item.producto_id || item.id,
-        cantidad: item.cantidad,
-        precio_unitario: item.precio_unitario || item.precio,
+        producto_id: parseInt(item.producto_id || item.id || 1),
+        producto_nombre: item.producto_nombre || item.nombre || 'Producto',
+        cantidad: parseInt(item.cantidad || 1),
+        precio_unitario: parseFloat(item.precio_unitario || item.precio || 0).toFixed(2),
         notas: item.notas || ''
       }))
     };
@@ -58,12 +59,15 @@ export async function crearPedidoAPI(pedidoData) {
     });
 
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(JSON.stringify(err));
+      const errText = await res.text();
+      console.error('Error al crear pedido en Django:', errText);
+      alert('Error en el servidor Django al guardar el pedido: ' + errText);
+      return null;
     }
     return await res.json();
   } catch (e) {
-    console.warn('API Error (crearPedidoAPI):', e);
+    console.error('API Error (crearPedidoAPI):', e);
+    alert('Error de conexión con el backend: ' + e.message);
     return null;
   }
 }

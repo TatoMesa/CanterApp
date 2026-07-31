@@ -80,7 +80,12 @@ export default function App() {
   const syncOrdersWithServer = async () => {
     const apiOrders = await fetchPedidosCocina();
     if (apiOrders && Array.isArray(apiOrders)) {
-      setOrders(apiOrders);
+      setOrders(prev => {
+        const apiIds = new Set(apiOrders.map(o => o.id));
+        const localUnsynced = prev.filter(o => !apiIds.has(o.id) && o.estado_pedido !== 'ENTREGADO');
+        return [...apiOrders, ...localUnsynced];
+      });
+
       // Actualizar también en el historial
       setAllOrdersHistory(prev => {
         const map = new Map();
