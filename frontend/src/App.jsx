@@ -243,11 +243,10 @@ export default function App() {
     setActiveTrackedOrder(createdOrder);
     setIsTrackerModalOpen(true);
 
-    // Si eligió Mercado Pago y la API devolvió un link de pago, redirigir
-    if (apiResult && apiResult.mercado_pago && apiResult.mercado_pago.init_point) {
-      window.open(apiResult.mercado_pago.init_point, '_blank');
-    } else if (apiResult && apiResult.mp_init_point) {
-      window.open(apiResult.mp_init_point, '_blank');
+    // Si eligió Mercado Pago y la API devolvió un link de pago, redirigir directamente al checkout de MP
+    const mpUrl = apiResult?.mercado_pago?.init_point || apiResult?.mp_init_point;
+    if (mpUrl) {
+      window.location.href = mpUrl;
     }
   };
 

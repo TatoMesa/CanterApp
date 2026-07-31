@@ -97,10 +97,10 @@ REST_FRAMEWORK = {
 # Configuración de Mercado Pago SDK
 MERCADO_PAGO_ACCESS_TOKEN = os.environ.get(
     'MERCADO_PAGO_ACCESS_TOKEN',
-    'TEST-1234567890123456-111111-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-123456789' # Reemplazar con credenciales reales
+    'TEST-1234567890123456-111111-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-123456789'
 )
 MERCADO_PAGO_WEBHOOK_URL = os.environ.get(
     'MERCADO_PAGO_WEBHOOK_URL',
-    'https://api.canterapp.com/api/webhooks/mercadopago/'
+    'https://canterapp.nexusstudiocode.online/api/webhooks/mercadopago/'
 )
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://canterapp.nexusstudiocode.online')
